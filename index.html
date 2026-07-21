@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análise — Roldão Ferragens</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;color:#333;min-height:100vh}
+.hdr{background:#1a1a2e;color:#fff;padding:22px 20px}
+.hdr h1{font-size:1.35rem;font-weight:700}
+.hdr p{font-size:.8rem;opacity:.6;margin-top:3px}
+.hdr-meta{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.hdr-tag{background:rgba(255,255,255,.12);border-radius:6px;padding:4px 12px;font-size:.74rem}
+.upload-wrap{max-width:540px;margin:80px auto;padding:0 20px}
+.upload-box{border:3px dashed #ccc;border-radius:16px;padding:60px 24px;text-align:center;background:#fff;cursor:pointer;transition:all .2s}
+.upload-box:hover{border-color:#e07b00;background:#fff8f0}
+.upload-icon{font-size:3rem;margin-bottom:12px}
+.upload-box h2{font-size:1rem;color:#444;margin-bottom:6px}
+.upload-box p{font-size:.82rem;color:#888}
+.tabs-wrap{background:#fff;border-bottom:2px solid #eee;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.tabs{display:flex;max-width:1000px;margin:0 auto;overflow-x:auto}
+.tab{padding:14px 18px;font-size:.81rem;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s}
+.tab.on{color:#e07b00;border-bottom-color:#e07b00}
+.content{max-width:1000px;margin:0 auto;padding:22px 16px 60px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.kpi{flex:1;min-width:130px;background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.kpi .v{font-size:1.9rem;font-weight:700;color:#e07b00;line-height:1}
+.kpi .l{font-size:.71rem;color:#888;margin-top:5px}
+.kpi .s{font-size:.75rem;color:#555;margin-top:5px;font-weight:600}
+.card{background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-title{font-size:.87rem;font-weight:700;color:#444;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.badge{font-size:.68rem;background:#fff3e0;color:#e07b00;padding:2px 8px;border-radius:20px;font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.br{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.bl{font-size:.77rem;color:#555;min-width:150px;max-width:150px;text-align:right;line-height:1.3}
+.bt{flex:1;background:#f0f0f0;border-radius:20px;height:24px;overflow:hidden}
+.bf{height:24px;border-radius:20px;background:#e07b00;display:flex;align-items:center;padding:0 9px;font-size:.71rem;font-weight:700;color:#fff;white-space:nowrap;min-width:2px}
+.bp{font-size:.74rem;color:#aaa;min-width:38px;text-align:right}
+.abr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.abl{font-size:.82rem;color:#555;min-width:140px}
+.abt{flex:1;background:#f0f0f0;border-radius:20px;height:20px;overflow:hidden}
+.abf{height:20px;border-radius:20px;transition:width .6s}
+.abv{font-size:.82rem;font-weight:700;color:#e07b00;min-width:32px}
+.nps-segs{display:flex;gap:8px;margin-bottom:14px}
+.nps-seg{flex:1;border-radius:10px;padding:14px 8px;text-align:center}
+.nps-seg .sv{font-size:1.5rem;font-weight:700}
+.nps-seg .sl{font-size:.68rem;margin-top:3px;line-height:1.4;color:#555}
+.ns-d{background:#ffebee}.ns-p{background:#f5f5f5}.ns-pr{background:#e8f5e9}
+.nps-score{font-size:3.2rem;font-weight:700;text-align:center;margin:8px 0}
+.nps-interp{font-size:.8rem;text-align:center;color:#888;margin-bottom:4px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.79rem}
+th{background:#1a1a2e;color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+tr:hover td{background:#fff8f0}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:700}
+.pg{background:#e8f5e9;color:#2e7d32}.po{background:#fff3e0;color:#e07b00}.pr{background:#ffebee;color:#c62828}.pb{background:#e3f2fd;color:#1565c0}
+.sug{padding:12px 14px;border-left:3px solid #e07b00;background:#fff8f0;border-radius:0 8px 8px 0;margin-bottom:9px}
+.sug-meta{font-size:.67rem;color:#e07b00;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.sug-text{font-size:.83rem;line-height:1.55;color:#444}
+.ins{border-left:4px solid #e07b00;padding:14px 16px;margin-bottom:12px;background:#fff;border-radius:0 10px 10px 0;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+.ins h4{font-size:.88rem;font-weight:700;color:#e07b00;margin-bottom:7px}
+.ins p{font-size:.83rem;line-height:1.65;color:#444}
+.ins.ok{border-color:#2e7d32}.ins.ok h4{color:#2e7d32}
+.ins.warn{border-color:#c62828}.ins.warn h4{color:#c62828}
+.ins.info{border-color:#1565c0}.ins.info h4{color:#1565c0}
+.norm-box{background:#f9f9f9;border-radius:8px;padding:11px 13px;margin-bottom:8px;font-size:.79rem}
+.norm-canon{font-weight:700;color:#e07b00;margin-bottom:4px}
+.norm-orig-list{color:#777;font-size:.74rem}
+.stitle{font-size:1rem;font-weight:700;color:#333;margin-bottom:14px;margin-top:4px;padding-bottom:10px;border-bottom:2px solid #f0f0f0}
+.no-data{text-align:center;color:#ccc;font-size:.82rem;padding:20px}
+.hidden{display:none}
+.sec{display:none}
+.sec.on{display:block}
+.bairro-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.bsel{padding:6px 12px;border-radius:6px;font-size:.74rem;font-weight:600;cursor:pointer;border:2px solid #e0e0e0;background:#fff;color:#666;transition:all .2s}
+.bsel.on{border-color:#e07b00;background:#e07b00;color:#fff}
+#uploadInput{display:none}
+.divider{font-size:.82rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.8px;margin:18px 0 12px;padding-bottom:8px;border-bottom:1px solid #eee}
+</style>
+</head>
+<body>
+
+<div id="uploadView">
+  <div style="background:#1a1a2e;color:#fff;padding:22px 20px">
+    <h1 style="font-size:1.3rem;font-weight:700">📊 Análise de Pesquisa — Roldão Ferragens</h1>
+    <p style="font-size:.8rem;opacity:.6;margin-top:4px">Faça upload da planilha para iniciar</p>
+  </div>
+  <div class="upload-wrap">
+    <div class="upload-box" onclick="document.getElementById('uploadInput').click()">
+      <div class="upload-icon">📊</div>
+      <h2>Clique para selecionar a planilha</h2>
+      <p>Arquivo .xlsx exportado do Google Sheets</p>
+    </div>
+    <input type="file" id="uploadInput" accept=".xlsx,.xls" onchange="handleUpload(event)">
+  </div>
+</div>
+
+<div id="mainView" class="hidden">
+  <div class="hdr">
+    <h1>📊 Análise de Pesquisa de Marketing</h1>
+    <p>Roldão Ferragens — Mercado de Materiais de Construção</p>
+    <div class="hdr-meta">
+      <span class="hdr-tag" id="hdrTotal">— entrevistas</span>
+      <span class="hdr-tag" id="hdrBairros">— bairros</span>
+      <span class="hdr-tag" id="hdrData"></span>
+    </div>
+  </div>
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <div class="tab on"  onclick="showSec('Geral',this)">📋 Visão Geral</div>
+      <div class="tab"     onclick="showSec('Empresas',this)">🏢 Empresas</div>
+      <div class="tab"     onclick="showSec('Bairros',this)">📍 Por Bairro</div>
+      <div class="tab"     onclick="showSec('Sugestoes',this)">💬 Sugestões</div>
+      <div class="tab"     onclick="showSec('Insights',this)">🧠 Insights</div>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- GERAL -->
+    <div id="secGeral" class="sec on">
+      <div class="kpis" id="kpiRow"></div>
+      <div class="g2">
+        <div class="card"><div class="card-title">👤 Gênero</div><div id="chartGenero"></div></div>
+        <div class="card"><div class="card-title">🎂 Faixa Etária</div><div id="chartIdade"></div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="card-title">🛒 Onde Costuma Comprar</div><div id="chartOnde"></div></div>
+        <div class="card"><div class="card-title">🏷️ Conhece a Roldão?</div><div id="chartConhece"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">⭐ Avaliações Médias — Roldão Ferragens <span class="badge">Escala 1–5</span></div>
+        <div id="chartAval"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📣 NPS — Probabilidade de Recomendação</div>
+        <div id="chartNps"></div>
+      </div>
+    </div>
+
+    <!-- EMPRESAS -->
+    <div id="secEmpresas" class="sec">
+      <div class="stitle">🧠 Top of Mind — Primeira empresa citada espontaneamente</div>
+      <div class="card"><div id="chartTopMind"></div></div>
+      <div class="stitle">🏆 Melhor Empresa — Escolha dos entrevistados</div>
+      <div class="card"><div id="chartMelhor"></div></div>
+      <div class="stitle">🔄 Normalização de Nomes</div>
+      <div class="card">
+        <p style="font-size:.8rem;color:#888;margin-bottom:12px">Grafias diferentes foram agrupadas sob um único nome canônico para garantir análise precisa.</p>
+        <div id="normMap"></div>
+      </div>
+    </div>
+
+    <!-- BAIRROS -->
+    <div id="secBairros" class="sec">
+      <div class="stitle">📊 Resumo Comparativo por Bairro</div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Bairro</th><th>N</th><th>Conhecem</th>
+              <th>Atend.</th><th>Qualidade</th><th>Preço</th>
+              <th>NPS</th><th>Top of Mind</th>
+            </tr></thead>
+            <tbody id="bairroTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="stitle">🔍 Análise Detalhada por Bairro</div>
+      <div class="bairro-sel" id="bairroSel"></div>
+      <div id="bairroDetail"></div>
+    </div>
+
+    <!-- SUGESTÕES -->
+    <div id="secSugestoes" class="sec">
+      <div class="stitle">💬 Sugestões de Melhoria <span id="sugCount" style="font-weight:400;color:#aaa;font-size:.85rem"></span></div>
+      <div id="sugList"></div>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div id="secInsights" class="sec">
+      <div class="stitle">🧠 Análise Estratégica — Roldão Ferragens</div>
+      <div id="insightsList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== NORMALIZAÇÃO =====
+const ALIASES = {
+  'roldao':'Roldão Ferragens','roldão':'Roldão Ferragens','roldao ferragens':'Roldão Ferragens','roldão ferragens':'Roldão Ferragens','roldao ferragen':'Roldão Ferragens','roldão ferragen':'Roldão Ferragens',
+  'c&c':'C&C','cc':'C&C','c e c':'C&C','c & c':'C&C','c&c casa e construcao':'C&C','c e c casa e construcao':'C&C','casa e construcao':'C&C',
+  'leroy':'Leroy Merlin','leroy merlin':'Leroy Merlin','leroi':'Leroy Merlin','leroi merlin':'Leroy Merlin','lerroy':'Leroy Merlin','lerroy merlin':'Leroy Merlin','leroy merlin':'Leroy Merlin',
+  'telhanorte':'Telhanorte','sodimac':'Sodimac','serveng':'Serveng',
+  'queiroz':'Queiroz','queiros':'Queiroz','queirós':'Queiroz','queiroz materiais':'Queiroz','queiroz ferragens':'Queiroz',
+  'casa do construtor':'Casa do Construtor','casa construtor':'Casa do Construtor',
+  'nao sabe':'','nao lembro':'','nenhuma':'','nao':'','nao sei':'','nenhum':'','n/a':'','nenhum':'','nao tem':'','nao conheco':'',
+};
+
+const STOP = ['de','da','do','das','dos','e','a','o','materiais','construcao','loja','lojas','comercio','grupo','empresa','de construcao'];
+
+function stripAcc(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function normKey(raw){
+  if(!raw) return '';
+  let s = String(raw).toLowerCase().trim();
+  s = stripAcc(s).replace(/[^\w\s&]/g,' ').replace(/\s+/g,' ').trim();
+  return s;
+}
+
+const normCache={}, normGroups={};
+
+function normCompany(raw){
+  if(!raw||!String(raw).trim()) return null;
+  const key = normKey(raw);
+  if(!key) return null;
+  if(normCache[key]!==undefined) return normCache[key];
+  // Direct
+  if(ALIASES[key]!==undefined){ normCache[key]=ALIASES[key]||null; return normCache[key]; }
+  // Partial
+  for(const [a,c] of Object.entries(ALIASES)){
+    if(key.includes(a)||(a.length>3&&a.includes(key))){ normCache[key]=c||null; return c||null; }
+  }
+  // Clean + capitalize
+  const w = key.split(' ').filter(x=>!STOP.includes(x)&&x.length>1).join(' ');
+  const r = w ? w.charAt(0).toUpperCase()+w.slice(1) : null;
+  normCache[key]=r; return r;
+}
+
+function trackNorm(raw,canon){
+  if(!canon||!raw) return;
+  const r=String(raw).trim();
+  if(!normGroups[canon]) normGroups[canon]=new Set();
+  normGroups[canon].add(r);
+}
+
+function extractCompany(raw){
+  if(!raw) return null;
+  return String(raw).split(/[,;]|\bporque\b|\bpois\b|\bpq\b|\bpor que\b/i)[0].trim() || null;
+}
+
+function parseNum(v){
+  const n=parseFloat(v);
+  return isNaN(n)?null:n;
+}
+
+// ===== DADOS =====
+let DATA=[], BAIRROS=[];
+
+function processData(rows){
+  DATA = rows.filter(r=>Object.values(r).some(v=>String(v).trim()));
+  DATA.forEach(r=>{
+    r._topNorm  = normCompany(r['Top of Mind']);
+    r._melNorm  = normCompany(extractCompany(r['Melhor Empresa']));
+    if(r._topNorm) trackNorm(r['Top of Mind'],r._topNorm);
+    if(r._melNorm) trackNorm(r['Melhor Empresa'],r._melNorm);
+    r._atend = parseNum(r['Av. Atendimento']);
+    r._qual  = parseNum(r['Av. Qualidade']);
+    r._preco = parseNum(r['Av. Preço']);
+    r._nps   = parseNum(r['NPS']);
+  });
+  BAIRROS = [...new Set(DATA.map(r=>r['Bairro']).filter(Boolean))].sort();
+}
+
+function freq(arr){
+  const m={};
+  arr.forEach(v=>{ if(v&&String(v).trim()){ const k=String(v).trim(); m[k]=(m[k]||0)+1; }});
+  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+}
+
+function avg(arr){
+  const v=arr.filter(x=>x!==null&&x!==undefined);
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+}
+
+function npsScore(arr){
+  const v=arr.filter(x=>x!==null);
+  if(!v.length) return null;
+  return Math.round(((v.filter(x=>x>=9).length - v.filter(x=>x<=6).length)/v.length)*100);
+}
+
+function fd(b){ return b ? DATA.filter(r=>r['Bairro']===b) : DATA; }
+
+// ===== RENDER HELPERS =====
+function barChart(entries,total){
+  if(!entries.length) return '<div class="no-data">Sem dados</div>';
+  const mx=entries[0][1];
+  return entries.map(([label,val])=>{
+    const pct=total?Math.round((val/total)*100):0;
+    const w=mx?Math.max((val/mx)*100,2):2;
+    return `<div class="br"><div class="bl">${label}</div><div class="bt"><div class="bf" style="width:${w}%">${val}</div></div><div class="bp">${total?pct+'%':''}</div></div>`;
+  }).join('');
+}
+
+function avgBar(label,val){
+  if(val===null) return '';
+  const color=val>=4?'#2e7d32':val>=3?'#e07b00':'#c62828';
+  const w=(val/5)*100;
+  return `<div class="abr"><div class="abl">${label}</div><div class="abt"><div class="abf" style="width:${w}%;background:${color}"></div></div><div class="abv" style="color:${color}">${val.toFixed(2)}</div></div>`;
+}
+
+function pill(val,cls){ return `<span class="pill ${cls}">${val}</span>`; }
+
+function pillPct(n,total){
+  if(!total) return '—';
+  const p=Math.round((n/total)*100);
+  return pill(p+'%', p>=60?'pg':p>=35?'po':'pr');
+}
+
+function pillAvg(v){
+  if(v===null) return '—';
+  return pill(v.toFixed(1), v>=4?'pg':v>=3?'po':'pr');
+}
+
+function pillNPS(s){
+  if(s===null) return '—';
+  return pill(s, s>=50?'pg':s>=0?'po':'pr');
+}
+
+// ===== SEÇÕES =====
+function renderGeral(d){
+  const n=d.length;
+  const conheceN=d.filter(r=>r['Conhece Roldão']&&r['Conhece Roldão']!=='Não conheço').length;
+  const npsArr=d.map(r=>r._nps).filter(x=>x!==null);
+  const ns=npsScore(npsArr);
+  const mAtend=avg(d.map(r=>r._atend).filter(x=>x!==null));
+  const mQual =avg(d.map(r=>r._qual ).filter(x=>x!==null));
+  const mPreco=avg(d.map(r=>r._preco).filter(x=>x!==null));
+  const avalids=[mAtend,mQual,mPreco].filter(x=>x!==null);
+  const mGeral=avalids.length?avg(avalids):null;
+
+  document.getElementById('kpiRow').innerHTML=[
+    {v:n,                      l:'Total de entrevistas', s:''},
+    {v:n?Math.round((conheceN/n)*100)+'%':'—', l:'Conhecem a Roldão', s:''},
+    {v:ns!==null?ns:'—',       l:'NPS Score', s:ns!==null?(ns>=50?'✅ Muito bom':ns>=0?'⚠️ Atenção necessária':'🔴 Crítico'):''},
+    {v:mGeral!==null?mGeral.toFixed(2):'—', l:'Avaliação média geral', s:'Escala 1–5'},
+  ].map(k=>`<div class="kpi"><div class="v">${k.v}</div><div class="l">${k.l}</div>${k.s?`<div class="s">${k.s}</div>`:''}</div>`).join('');
+
+  document.getElementById('chartGenero' ).innerHTML=barChart(freq(d.map(r=>r['Gênero'])),n);
+  document.getElementById('chartIdade'  ).innerHTML=barChart(freq(d.map(r=>r['Faixa Etária'])),n);
+  document.getElementById('chartOnde'   ).innerHTML=barChart(freq(d.map(r=>r['Onde Compra'])),n);
+  document.getElementById('chartConhece').innerHTML=barChart(freq(d.map(r=>r['Conhece Roldão'])),n);
+
+  document.getElementById('chartAval').innerHTML=`
+    ${avgBar('Atendimento',mAtend)}
+    ${avgBar('Qualidade dos Produtos',mQual)}
+    ${avgBar('Preço / Custo-Benefício',mPreco)}
+    <div style="font-size:.71rem;color:#aaa;margin-top:8px">🟢 ≥ 4 &nbsp; 🟠 ≥ 3 &nbsp; 🔴 < 3</div>
+  `;
+
+  if(npsArr.length){
+    const det=npsArr.filter(v=>v<=6).length, pas=npsArr.filter(v=>v>=7&&v<=8).length, pro=npsArr.filter(v=>v>=9).length;
+    const npsColor=ns>=50?'#2e7d32':ns>=0?'#e07b00':'#c62828';
+    const npsLabel=ns>=70?'Zona de Excelência':ns>=50?'Zona de Qualidade':ns>=30?'Zona de Melhoria':ns>=0?'Zona de Atenção':'Zona Crítica';
+    document.getElementById('chartNps').innerHTML=`
+      <div class="nps-segs">
+        <div class="nps-seg ns-d"><div class="sv" style="color:#c62828">${det}</div><div class="sl">Detratores<br>0–6</div></div>
+        <div class="nps-seg ns-p"><div class="sv" style="color:#888">${pas}</div><div class="sl">Neutros<br>7–8</div></div>
+        <div class="nps-seg ns-pr"><div class="sv" style="color:#2e7d32">${pro}</div><div class="sl">Promotores<br>9–10</div></div>
+      </div>
+      <div class="nps-score" style="color:${npsColor}">${ns}</div>
+      <div class="nps-interp">${npsLabel} · ${Math.round((pro/npsArr.length)*100)}% promotores · ${Math.round((det/npsArr.length)*100)}% detratores</div>
+    `;
+  } else {
+    document.getElementById('chartNps').innerHTML='<div class="no-data">Sem dados de NPS</div>';
+  }
+}
+
+function renderEmpresas(d){
+  const n=d.length;
+  document.getElementById('chartTopMind').innerHTML=barChart(freq(d.map(r=>r._topNorm).filter(Boolean)).slice(0,12),n);
+  document.getElementById('chartMelhor' ).innerHTML=barChart(freq(d.map(r=>r._melNorm).filter(Boolean)).slice(0,12),n);
+  let html='';
+  Object.entries(normGroups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([canon,set])=>{
+    const origs=[...set].filter(o=>normKey(o)!==normKey(canon));
+    if(!origs.length) return;
+    html+=`<div class="norm-box"><div class="norm-canon">→ ${canon}</div><div class="norm-orig-list">Agrupadas: ${origs.join(' · ')}</div></div>`;
+  });
+  document.getElementById('normMap').innerHTML=html||'<div class="no-data">Todos os nomes já estavam padronizados</div>';
+}
+
+function bStat(d){
+  const n=d.length;
+  const cN=d.filter(r=>r['Conhece Roldão']&&r['Conhece Roldão']!=='Não conheço').length;
+  const npsArr=d.map(r=>r._nps).filter(x=>x!==null);
+  return {
+    n, cN,
+    cPct:n?Math.round((cN/n)*100):null,
+    mAtend:avg(d.map(r=>r._atend).filter(x=>x!==null)),
+    mQual :avg(d.map(r=>r._qual ).filter(x=>x!==null)),
+    mPreco:avg(d.map(r=>r._preco).filter(x=>x!==null)),
+    nps:npsScore(npsArr), npsArr,
+    top:freq(d.map(r=>r._topNorm).filter(Boolean))[0]?.[0]||'—',
+  };
+}
+
+function renderBairros(){
+  let tbody='';
+  BAIRROS.forEach(b=>{
+    const s=bStat(fd(b));
+    tbody+=`<tr>
+      <td><strong>${b}</strong></td>
+      <td>${s.n}</td>
+      <td>${pillPct(s.cN,s.n)}</td>
+      <td>${pillAvg(s.mAtend)}</td>
+      <td>${pillAvg(s.mQual)}</td>
+      <td>${pillAvg(s.mPreco)}</td>
+      <td>${pillNPS(s.nps)}</td>
+      <td style="font-size:.74rem">${s.top}</td>
+    </tr>`;
+  });
+  document.getElementById('bairroTableBody').innerHTML=tbody;
+
+  const sel=document.getElementById('bairroSel');
+  sel.innerHTML=BAIRROS.map((b,i)=>`<div class="bsel${i===0?' on':''}" onclick="selBairro('${b.replace(/'/g,"\\'")}',this)">${b}</div>`).join('');
+  if(BAIRROS.length) renderBairroDetail(BAIRROS[0]);
+}
+
+function selBairro(b,el){
+  document.querySelectorAll('.bsel').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  renderBairroDetail(b);
+}
+
+function renderBairroDetail(b){
+  const d=fd(b), s=bStat(d), n=d.length;
+  const top5=freq(d.map(r=>r._topNorm).filter(Boolean)).slice(0,6);
+  const mel5=freq(d.map(r=>r._melNorm).filter(Boolean)).slice(0,6);
+  const det=s.npsArr.filter(v=>v<=6).length, pas=s.npsArr.filter(v=>v>=7&&v<=8).length, pro=s.npsArr.filter(v=>v>=9).length;
+  const nc=s.nps!==null?(s.nps>=50?'#2e7d32':s.nps>=0?'#e07b00':'#c62828'):'#ccc';
+  document.getElementById('bairroDetail').innerHTML=`
+    <div class="kpis" style="margin-bottom:14px">
+      ${[{v:n,l:'Entrevistas'},{v:s.cPct!==null?s.cPct+'%':'—',l:'Conhecem a Roldão'},{v:s.nps!==null?s.nps:'—',l:'NPS Score'}]
+        .map(k=>`<div class="kpi"><div class="v">${k.v}</div><div class="l">${k.l}</div></div>`).join('')}
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-title">🧠 Top of Mind</div>${barChart(top5,n)}</div>
+      <div class="card"><div class="card-title">🏆 Melhor Empresa</div>${barChart(mel5,n)}</div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">⭐ Avaliações</div>
+        ${avgBar('Atendimento',s.mAtend)}${avgBar('Qualidade',s.mQual)}${avgBar('Preço',s.mPreco)}
+      </div>
+      <div class="card">
+        <div class="card-title">📣 NPS</div>
+        ${s.npsArr.length?`
+          <div class="nps-segs"><div class="nps-seg ns-d"><div class="sv" style="color:#c62828;font-size:1.2rem">${det}</div><div class="sl">Det. 0–6</div></div><div class="nps-seg ns-p"><div class="sv" style="color:#888;font-size:1.2rem">${pas}</div><div class="sl">Neu. 7–8</div></div><div class="nps-seg ns-pr"><div class="sv" style="color:#2e7d32;font-size:1.2rem">${pro}</div><div class="sl">Pro. 9–10</div></div></div>
+          <div class="nps-score" style="font-size:2.4rem;color:${nc}">${s.nps}</div>
+        `:'<div class="no-data">Sem dados NPS</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🛒 Onde Compra — ${b}</div>
+      ${barChart(freq(d.map(r=>r['Onde Compra'])),n)}
+    </div>
+  `;
+}
+
+function renderSugestoes(d){
+  const sug=d.filter(r=>r['Sugestão de Melhoria']&&String(r['Sugestão de Melhoria']).trim().length>2);
+  document.getElementById('sugCount').textContent=`(${sug.length} respostas)`;
+  document.getElementById('sugList').innerHTML=sug.length
+    ? sug.map(r=>`<div class="sug">
+        <div class="sug-meta">${r['Bairro']||'—'} &nbsp;·&nbsp; ${r['Gênero']||'—'} &nbsp;·&nbsp; ${r['Faixa Etária']||'—'}</div>
+        <div class="sug-text">${String(r['Sugestão de Melhoria']).trim()}</div>
+      </div>`).join('')
+    : '<div class="no-data">Nenhuma sugestão registrada</div>';
+}
+
+function renderInsights(d){
+  const n=d.length;
+  const cN=d.filter(r=>r['Conhece Roldão']&&r['Conhece Roldão']!=='Não conheço').length;
+  const cPct=n?Math.round((cN/n)*100):0;
+  const topMindF=freq(d.map(r=>r._topNorm).filter(Boolean));
+  const melhorF =freq(d.map(r=>r._melNorm).filter(Boolean));
+  const t1=topMindF[0]?.[0]||'—', t1p=n&&topMindF[0]?Math.round((topMindF[0][1]/n)*100):0;
+  const m1=melhorF[0]?.[0]||'—',  m1p=n&&melhorF[0]?Math.round((melhorF[0][1]/n)*100):0;
+  const rTop=topMindF.find(([k])=>k==='Roldão Ferragens'), rTopPct=rTop&&n?Math.round((rTop[1]/n)*100):0;
+  const rMel=melhorF.find(([k])=>k==='Roldão Ferragens'),  rMelPct=rMel&&n?Math.round((rMel[1]/n)*100):0;
+  const mAtend=avg(d.map(r=>r._atend).filter(x=>x!==null));
+  const mQual =avg(d.map(r=>r._qual ).filter(x=>x!==null));
+  const mPreco=avg(d.map(r=>r._preco).filter(x=>x!==null));
+  const npsArr=d.map(r=>r._nps).filter(x=>x!==null);
+  const ns=npsScore(npsArr);
+  const det=npsArr.filter(v=>v<=6).length, pas=npsArr.filter(v=>v>=7&&v<=8).length, pro=npsArr.filter(v=>v>=9).length;
+  const sug=d.filter(r=>r['Sugestão de Melhoria']&&String(r['Sugestão de Melhoria']).trim().length>2);
+
+  const bStats=BAIRROS.map(b=>{ const s=bStat(fd(b)); return {...s,b}; });
+  const topBairro=[...bStats].sort((a,b2)=>b2.cPct-a.cPct)[0];
+  const weakBairro=[...bStats].sort((a,b2)=>a.cPct-b2.cPct)[0];
+  const topNPS=[...bStats].filter(s=>s.nps!==null).sort((a,b2)=>b2.nps-a.nps)[0];
+  const weakNPS=[...bStats].filter(s=>s.nps!==null).sort((a,b2)=>a.nps-b2.nps)[0];
+
+  const avalRef=[{l:'Atendimento',v:mAtend},{l:'Qualidade',v:mQual},{l:'Preço',v:mPreco}];
+  const pontoBaixo=avalRef.filter(x=>x.v!==null).sort((a,b2)=>a.v-b2.v)[0];
+  const pontoAlto =avalRef.filter(x=>x.v!==null).sort((a,b2)=>b2.v-a.v)[0];
+
+  const compet2=topMindF.filter(([k])=>k!=='Roldão Ferragens').slice(0,2).map(([k,v])=>`${k} (${Math.round((v/n)*100)}%)`).join(' e ');
+
+  const insights=[
+    {
+      cls:'', icon:'📣',
+      title:`NPS: ${ns!==null?ns:'—'} — ${ns!==null?(ns>=70?'Excelente':ns>=50?'Muito Bom':ns>=30?'Bom, mas com espaço':ns>=0?'Atenção necessária':'Crítico'):'Sem dados'}`,
+      text:`O NPS de ${ns} indica ${ns>=50?'que a Roldão tem uma base sólida de fãs. A maioria dos clientes que avaliaram recomendariam a empresa.':ns>=30?'uma boa aceitação, mas há uma parcela significativa de neutros que podem ser convertidos com ações de relacionamento.':ns>=0?'mais promotores do que detratores, porém a margem é estreita. Ações de recuperação de clientes insatisfeitos são prioritárias.':'mais detratores do que promotores — situação que exige ação imediata.'} Dos ${npsArr.length} entrevistados que avaliaram: ${pro} promotores (${Math.round((pro/npsArr.length)*100)}%), ${pas} neutros (${Math.round((pas/npsArr.length)*100)}%) e ${det} detratores (${Math.round((det/npsArr.length)*100)}%). ${topNPS?`Por bairro, o NPS mais alto é em ${topNPS.b} (${topNPS.nps}) e o mais baixo em ${weakNPS?.b||'—'} (${weakNPS?.nps??'—'}).`:''}`
+    },
+    {
+      cls: cPct>=60?'ok':cPct>=40?'':'warn', icon:'🏷️',
+      title:`Reconhecimento de Marca: ${cPct}% conhecem a Roldão`,
+      text:`${cPct}% dos ${n} entrevistados declararam conhecer ou já ter ouvido falar da Roldão Ferragens. ${cPct>=70?'Um índice robusto que reflete boa presença regional.':cPct>=50?'Índice moderado com oportunidade real de crescimento em awareness.':'Menos da metade dos entrevistados conhece a marca — investimento em visibilidade é urgente.'} ${topBairro?`O bairro com maior reconhecimento é ${topBairro.b} (${topBairro.cPct}%)${weakBairro&&weakBairro.b!==topBairro.b?`, enquanto ${weakBairro.b} apresenta o menor índice (${weakBairro.cPct}%) — representando a maior oportunidade de expansão.`:'.'}`:''}`
+    },
+    {
+      cls:'info', icon:'🧠',
+      title:`Posição Competitiva — Top of Mind: Roldão ${rTopPct}% vs. ${t1} ${t1p}%`,
+      text:`Na lembrança espontânea, ${t1} lidera com ${t1p}% das citações. A Roldão Ferragens aparece com ${rTopPct}%${rTopPct>0?` das menções espontâneas':''}, indicando ${rTopPct>=30?'posição relevante na mente do consumidor':rTopPct>=15?'presença intermediária com espaço para avançar':'baixa presença na memória espontânea — o que limita o volume de clientes que chegam por iniciativa própria'}. Como "melhor empresa", ${m1} lidera com ${m1p}% e a Roldão aparece com ${rMelPct}%. ${compet2?`Os principais concorrentes mencionados são ${compet2}.`:''}`
+    },
+    {
+      cls: pontoAlto&&pontoAlto.v>=4?'ok':'', icon:'⭐',
+      title:`Avaliações: ${pontoAlto?pontoAlto.l+' se destaca':'Sem avaliações suficientes'} — Preço é o maior desafio`,
+      text:`${pontoAlto&&pontoAlto.v?`O ${pontoAlto.l} é o ponto mais bem avaliado (${pontoAlto.v.toFixed(2)}/5)${pontoAlto.v>=4?' — um diferencial que deve ser comunicado ativamente no marketing da empresa.':'.'}`:''} ${pontoBaixo&&pontoBaixo.v?`O ${pontoBaixo.l} é o ponto de maior atenção (${pontoBaixo.v.toFixed(2)}/5)${pontoBaixo.l==='Preço / Custo-Benefício'?' — percepção de preço alto é comum em ferragens. Ações de transparência de preço, promoções e comunicação de custo-benefício podem mudar essa percepção sem necessariamente alterar a tabela.':' — requer atenção operacional imediata.'}`:''}`
+    },
+    {
+      cls:'info', icon:'🗺️',
+      title:'Oportunidades por Bairro',
+      text:`A pesquisa mapeou ${BAIRROS.length} bairros. ${weakBairro?`${weakBairro.b} é o bairro com menor reconhecimento da Roldão (${weakBairro.cPct}%), representando uma oportunidade direta de expansão com ações hiperlocais — panfletagem, parcerias locais, geofencing ou patrocínio de eventos comunitários. `:''} ${bStats.filter(s=>s.cPct<50).length?`${bStats.filter(s=>s.cPct<50).length} bairro(s) com menos de 50% de reconhecimento merecem atenção prioritária em campanhas de awareness.`:''} Cruzar bairros de menor awareness com o hábito de compra revelado na pesquisa ajuda a identificar praças onde a concorrência ainda domina.`
+    },
+    {
+      cls: sug.length>=10?'warn':'', icon:'💬',
+      title:`${sug.length} Sugestões de Melhoria Coletadas`,
+      text:`${sug.length} entrevistados deixaram sugestões qualitativas — um dado precioso para o roadmap de melhorias. Esses relatos revelam os pontos de fricção reais da experiência de compra. Temas como variedade de produtos, condições de pagamento, atendimento e preço são os mais recorrentes em pesquisas do setor de materiais de construção. Recomenda-se categorizar as sugestões por tema e cruzar com os bairros de origem para priorizar melhorias de maior impacto. Confira todas na aba "💬 Sugestões".`
+    },
+  ];
+
+  document.getElementById('insightsList').innerHTML=insights.map(i=>`
+    <div class="ins ${i.cls}">
+      <h4>${i.icon} ${i.title}</h4>
+      <p>${i.text}</p>
+    </div>
+  `).join('');
+}
+
+// ===== RENDER GERAL =====
+function renderAll(){
+  const d=DATA, n=d.length;
+  document.getElementById('hdrTotal'  ).textContent=`${n} entrevistas`;
+  document.getElementById('hdrBairros').textContent=`${BAIRROS.length} bairros`;
+  document.getElementById('hdrData'   ).textContent=`Análise: ${new Date().toLocaleDateString('pt-BR')}`;
+  renderGeral(d);
+  renderEmpresas(d);
+  renderBairros();
+  renderSugestoes(d);
+  renderInsights(d);
+  document.getElementById('uploadView').classList.add('hidden');
+  document.getElementById('mainView').classList.remove('hidden');
+}
+
+// ===== NAV =====
+function showSec(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('sec'+id).classList.add('on');
+  el.classList.add('on');
+}
+
+// ===== FILE HANDLING =====
+function processWB(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+  if(!rows.length){ alert('Planilha vazia ou sem dados reconhecíveis.'); return; }
+  processData(rows);
+  renderAll();
+}
+
+function handleUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{ try{ processWB(XLSX.read(new Uint8Array(ev.target.result),{type:'array'})); }catch(err){ alert('Erro ao ler o arquivo: '+err.message); }};
+  r.readAsArrayBuffer(file);
+}
+
+// ===== AUTO-LOAD =====
+(async()=>{
+  try{
+    const data=await window.fs.readFile('Pesquisa  Roldão Ferragens.xlsx');
+    processWB(XLSX.read(data,{type:'array'}));
+  }catch(e){
+    // fallback: mostra upload
+    console.log('Auto-load falhou, mostrando upload.');
+  }
+})();
+</script>
+</body>
+</html>
